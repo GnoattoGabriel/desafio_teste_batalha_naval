@@ -76,7 +76,7 @@ module.exports = { posicionarFrota, atirar };
 {
   valida: true | false,
   tabuleiro: number[][] | null, // 10x10 quando válido; null quando inválido
-  motivo: string                // '' quando válido; descrição quando inválido
+  motivo: string                // '' quando válido; uma das strings da tabela abaixo
 }
 ```
 
@@ -89,7 +89,7 @@ module.exports = { posicionarFrota, atirar };
   afundado: 5 | 4 | 3 | 2 | null,
   vencedor: 0 | 1 | null,
   jogador: 0 | 1,           // próximo jogador, ou o vencedor quando houve fim
-  motivo: string            // '' nos tiros válidos; descrição nos demais
+  motivo: string            // '' nos tiros válidos; uma das strings da tabela abaixo
 }
 ```
 
@@ -127,7 +127,31 @@ fim também produz `erro`. Em ambos, o estado recebido é devolvido.
 resto é `null`. Acerto isolado e água não são revelados.
 
 Erros seguem o contrato já adotado na camada pura: `resultado: 'erro'` +
-`motivo` descritivo, sem campo adicional de tipo.
+`motivo` exato, sem campo adicional de tipo. Quando uma chamada é recusada,
+o identificador recebido é **preservado** no retorno: `atirar` devolve o
+`jogador` recebido mesmo que ele seja `2` (CT-46), e `posicionar` devolve o
+estado com a `vez` original quando o jogador é inválido (CT-63). Isso não
+contradiz o tipo `0 | 1` dos retornos válidos — a preservação vale apenas
+para recusas.
+
+### 1.6 Vocabulário de `motivo`
+
+Todas as recusas usam uma destas strings exatas; os testes comparam por valor,
+não apenas por "string não vazia":
+
+| Situação | `motivo` |
+|---|---|
+| frota nula, não-array, tamanho/contagem/orientação/coordenada inválidos | `frota invalida` |
+| grade de tiros nula, dimensão errada ou marca inválida | `grade de tiros invalida` |
+| tabuleiro nulo, dimensão errada ou casa fora de `0..5` | `tabuleiro invalido` |
+| alvo nulo, sem linha/coluna, decimal, `NaN` ou booleano | `alvo invalido` |
+| jogador diferente de `0`/`1` | `jogador invalido` |
+| tiro em casa já marcada | `tiro repetido` |
+| tiro antes das duas frotas | `frotas nao posicionadas` |
+| tiro fora da vez | `fora da vez` |
+| tiro depois do fim | `partida encerrada` |
+
+Nos retornos válidos, `motivo` é `''`.
 
 ## 2. Funcionamento dos casos de teste
 
@@ -153,6 +177,10 @@ teste em Javascript para testar Javascript**. O `.docx` é a especificação
 legível; os `.js` são a versão executável dos mesmos casos.
 
 ### Casos incluídos
+
+Nas linhas abaixo, `erro` e `repeticiao` significam também o `motivo` exato
+da [seção 1.6](#16-vocabulário-de-motivo). Os IDs marcados como "erro" não
+alteram o identificador recebido.
 
 | ID | Objetivo | Retorno esperado |
 |---|---|---|

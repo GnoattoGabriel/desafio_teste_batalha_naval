@@ -717,7 +717,7 @@ verifica('CT-50', 'rejeitar frota invalida na partida', [
     vez: 0,
     vencedor: null
   },
-  motivo: ''
+  motivo: 'frota invalida'
 });
 
 verifica('CT-51', 'rejeitar tiro antes das duas frotas', [
@@ -753,7 +753,7 @@ verifica('CT-51', 'rejeitar tiro antes das duas frotas', [
   resultado: 'erro',
   afundado: null,
   vencedor: null,
-  motivo: ''
+  motivo: 'frotas nao posicionadas'
 });
 
 verifica('CT-52', 'tiro na agua alterna de 0 para 1', [
@@ -6974,7 +6974,7 @@ verifica('CT-59', 'rejeitar tiro fora da vez', [
   resultado: 'erro',
   afundado: null,
   vencedor: null,
-  motivo: ''
+  motivo: 'fora da vez'
 });
 
 verifica('CT-60', 'rejeitar tiro depois do fim', [
@@ -7538,7 +7538,7 @@ verifica('CT-60', 'rejeitar tiro depois do fim', [
   resultado: 'erro',
   afundado: null,
   vencedor: 0,
-  motivo: ''
+  motivo: 'partida encerrada'
 });
 
 verifica('CT-62', 'sequencia completa ate a vitoria', [], () => {
@@ -7720,8 +7720,8 @@ testEach([
   const saida = partida.posicionar(copiaEstado, jogador, copiaFrota);
   assert.equal(saida.valida, false, `${rotulo}: valida`);
   assert.deepEqual(saida.estado, estado, `${rotulo}: estado devolvido intacto`);
-  assert.equal(typeof saida.motivo, 'string', `${rotulo}: motivo string`);
-  assert.ok(saida.motivo.length > 0, `${rotulo}: motivo vazio`);
+  assert.equal(saida.motivo, 'jogador invalido',
+    `${rotulo}: motivo deve ser 'jogador invalido'`);
   assert.deepEqual(estado, copiaEstado, `${rotulo}: estado recebido nao alterado`);
   assert.deepEqual(frota, copiaFrota, `${rotulo}: frota recebida nao alterada`);
 });

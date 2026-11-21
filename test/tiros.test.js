@@ -1620,7 +1620,8 @@ verifica('CT-22', 'rejeitar tiro repetido em casa de água', [
   resultado: 'repeticiao',
   afundado: null,
   vencedor: null,
-  jogador: 0
+  jogador: 0,
+  motivo: 'tiro repetido'
 });
 
 verifica('CT-23', 'rejeitar alvo com linha 10', [
@@ -1889,7 +1890,8 @@ verifica('CT-23', 'rejeitar alvo com linha 10', [
   resultado: 'erro',
   afundado: null,
   vencedor: null,
-  jogador: 0
+  jogador: 0,
+  motivo: 'alvo invalido'
 });
 
 verifica('CT-24', 'rejeitar alvo com coluna negativa', [
@@ -2158,7 +2160,8 @@ verifica('CT-24', 'rejeitar alvo com coluna negativa', [
   resultado: 'erro',
   afundado: null,
   vencedor: null,
-  jogador: 0
+  jogador: 0,
+  motivo: 'alvo invalido'
 });
 
 verifica('CT-25', 'vencer ao atingir o ultimo casco', [
@@ -3777,7 +3780,8 @@ verifica('CT-31', 'rejeitar tiro em casa já afundada', [
   resultado: 'repeticiao',
   afundado: null,
   vencedor: null,
-  jogador: 0
+  jogador: 0,
+  motivo: 'tiro repetido'
 });
 
 verifica('CT-32', 'rejeitar tabuleiro com dimensao errada', [
@@ -4045,7 +4049,8 @@ verifica('CT-32', 'rejeitar tabuleiro com dimensao errada', [
   resultado: 'erro',
   afundado: null,
   vencedor: null,
-  jogador: 0
+  jogador: 0,
+  motivo: 'tabuleiro invalido'
 });
 
 test('CT-27 — o ciclo de dois turnos alterna entre jogador 0 e 1', () => {
@@ -4150,7 +4155,7 @@ verifica('CT-38', 'rejeitar grade de tiros 9x10', [
   afundado: null,
   vencedor: null,
   jogador: 0,
-  motivo: ''
+  motivo: 'grade de tiros invalida'
 });
 
 verifica('CT-39', 'rejeitar grade de tiros com marca invalida', [
@@ -4420,7 +4425,7 @@ verifica('CT-39', 'rejeitar grade de tiros com marca invalida', [
   afundado: null,
   vencedor: null,
   jogador: 0,
-  motivo: ''
+  motivo: 'grade de tiros invalida'
 });
 
 verifica('CT-40', 'rejeitar tabuleiro com casa 6', [
@@ -4690,7 +4695,7 @@ verifica('CT-40', 'rejeitar tabuleiro com casa 6', [
   afundado: null,
   vencedor: null,
   jogador: 0,
-  motivo: ''
+  motivo: 'tabuleiro invalido'
 });
 
 testEach([
@@ -4737,8 +4742,8 @@ testEach([
   assert.equal(saida.resultado, 'erro', `${rotulo}: resultado`);
   assert.equal(saida.jogador, 0, `${rotulo}: jogador`);
   assert.deepEqual(saida.tiros, tiros, `${rotulo}: tiros inalterados`);
-  assert.equal(typeof saida.motivo, 'string', `${rotulo}: motivo string`);
-  assert.ok(saida.motivo.length > 0, `${rotulo}: motivo vazio`);
+  assert.equal(saida.motivo, 'alvo invalido',
+    `${rotulo}: motivo deve ser 'alvo invalido'`);
   assert.deepEqual(tab, copiaTab, `${rotulo}: tabuleiro inalterado`);
   assert.deepEqual(tiros, copiaTiros, `${rotulo}: grade inalterada`);
   assert.deepEqual(alvo, copiaAlvo, `${rotulo}: alvo inalterado`);
@@ -5328,7 +5333,7 @@ verifica('CT-45', 'rejeitar grade de tiros nula', [
   afundado: null,
   vencedor: null,
   jogador: 0,
-  motivo: ''
+  motivo: 'grade de tiros invalida'
 });
 
 verifica('CT-46', 'rejeitar jogador invalido no tiro', [
@@ -5598,5 +5603,5 @@ verifica('CT-46', 'rejeitar jogador invalido no tiro', [
   afundado: null,
   vencedor: null,
   jogador: 2,
-  motivo: ''
+  motivo: 'jogador invalido'
 });

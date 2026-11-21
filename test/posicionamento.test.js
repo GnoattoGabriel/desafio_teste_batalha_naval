@@ -209,7 +209,8 @@ verifica('CT-05', 'rejeitar navio que ultrapassa a coluna 9', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-06', 'rejeitar navio que ultrapassa a linha 9', [
@@ -241,7 +242,8 @@ verifica('CT-06', 'rejeitar navio que ultrapassa a linha 9', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-07', 'rejeitar navios sobrepostos', [
@@ -273,7 +275,8 @@ verifica('CT-07', 'rejeitar navios sobrepostos', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-08', 'rejeitar navio de tamanho 6', [
@@ -305,7 +308,8 @@ verifica('CT-08', 'rejeitar navio de tamanho 6', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-09', 'rejeitar tamanho duplicado', [
@@ -337,7 +341,8 @@ verifica('CT-09', 'rejeitar tamanho duplicado', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-10', 'rejeitar frota incompleta', [
@@ -363,7 +368,8 @@ verifica('CT-10', 'rejeitar frota incompleta', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-11', 'rejeitar orientacao inválida', [
@@ -395,7 +401,8 @@ verifica('CT-11', 'rejeitar orientacao inválida', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-12', 'rejeitar linha negativa', [
@@ -427,7 +434,8 @@ verifica('CT-12', 'rejeitar linha negativa', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-13', 'rejeitar coluna 10', [
@@ -459,14 +467,16 @@ verifica('CT-13', 'rejeitar coluna 10', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-14', 'rejeitar frota vazia', [
   []
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-15', 'rejeitar navio sem campo obrigatorio', [
@@ -497,7 +507,8 @@ verifica('CT-15', 'rejeitar navio sem campo obrigatorio', [
   ]
 ], (frota) => posicionarFrota(frota), {
   valida: false,
-  tabuleiro: null
+  tabuleiro: null,
+  motivo: 'frota invalida'
 });
 
 verifica('CT-16', 'nao alterar a frota recebida', [
@@ -563,8 +574,8 @@ testEach([
   const saida = posicionarFrota(copia);
   assert.equal(saida.valida, false, `${rotulo}: valida`);
   assert.equal(saida.tabuleiro, null, `${rotulo}: tabuleiro`);
-  assert.equal(typeof saida.motivo, 'string', `${rotulo}: motivo string`);
-  assert.ok(saida.motivo.length > 0, `${rotulo}: motivo nao pode ser vazio`);
+  assert.equal(saida.motivo, 'frota invalida',
+    `${rotulo}: motivo deve ser 'frota invalida'`);
   assert.deepEqual(frota, copia, `${rotulo}: entrada nao alterada`);
 });
 
@@ -604,7 +615,7 @@ verifica('CT-35', 'rejeitar frota com cinco navios', [
 ], (frota) => posicionarFrota(frota), {
   valida: false,
   tabuleiro: null,
-  motivo: ''
+  motivo: 'frota invalida'
 });
 
 verifica('CT-36', 'rejeitar linha decimal', [
@@ -637,7 +648,7 @@ verifica('CT-36', 'rejeitar linha decimal', [
 ], (frota) => posicionarFrota(frota), {
   valida: false,
   tabuleiro: null,
-  motivo: ''
+  motivo: 'frota invalida'
 });
 
 verifica('CT-37', 'rejeitar orientacao minuscula', [
@@ -670,7 +681,7 @@ verifica('CT-37', 'rejeitar orientacao minuscula', [
 ], (frota) => posicionarFrota(frota), {
   valida: false,
   tabuleiro: null,
-  motivo: ''
+  motivo: 'frota invalida'
 });
 
 verifica('CT-44', 'aceitar contato diagonal entre navios', [

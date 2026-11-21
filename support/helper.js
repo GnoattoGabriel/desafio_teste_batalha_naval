@@ -66,13 +66,7 @@ const verifica = (id, descricao, entradas, chamada, esperado) => {
     }
     for (const [campo, valor] of Object.entries(esperado)) {
       if (campo === '__retorno') continue;
-      if (campo === 'motivo' && (esperado.valida === false ||
-          ['erro', 'repeticiao'].includes(esperado.resultado))) {
-        assert.equal(typeof saida.motivo, 'string', `${id}: motivo deve ser string`);
-        assert.ok(saida.motivo.length > 0, `${id}: motivo nao pode ser vazio`);
-      } else {
-        assert.deepEqual(saida[campo], valor, `${id}: campo ${campo}`);
-      }
+      assert.deepEqual(saida[campo], valor, `${id}: campo ${campo}`);
     }
     entradas.forEach((original, i) =>
       assert.deepEqual(original, copias[i], `${id}: entrada ${i} nao pode ser alterada`));
