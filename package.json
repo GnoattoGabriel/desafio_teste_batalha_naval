@@ -1,0 +1,9 @@
+{
+  "name": "desafio-teste-batalha-naval",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Casos de teste em JavaScript para batalha naval 10x10 com 2 jogadores",
+  "scripts": {
+    "test": "node --test"
+  }
+}
