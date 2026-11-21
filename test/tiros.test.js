@@ -1,598 +1,8 @@
 'use strict';
 
-// Casos de teste executaveis correspondentes a casos_de_teste_batalha_naval.docx.
-// A implementacao de src/batalhaNaval.js deve ser produzida a partir da
-// especificacao em .docx. Enquanto ela nao existe, os testes falham com
-// mensagem clara (estado RED esperado do desafio).
-
-const test = require('node:test');
-const assert = require('node:assert/strict');
-
-let batalhaNaval;
-try {
-  batalhaNaval = require('../src/batalhaNaval');
-} catch (erro) {
-  const detalhe = (erro && (erro.stack || erro.message)) || String(erro);
-  batalhaNaval = {};
-  var erroCarregamento = detalhe;
-}
-const posicionarFrota = batalhaNaval.posicionarFrota || (() => {
-  throw new Error('Crie src/batalhaNaval.js exportando posicionarFrota. ' +
-    (typeof erroCarregamento === 'undefined' ? '' : erroCarregamento));
-});
-const atirar = batalhaNaval.atirar || (() => {
-  throw new Error('Crie src/batalhaNaval.js exportando atirar. ' +
-    (typeof erroCarregamento === 'undefined' ? '' : erroCarregamento));
-});
-
-// Copia generica: preserva todas as entradas, inclusive null e arrays 10x10.
-const clonar = (v) => {
-  if (Array.isArray(v)) return v.map(clonar);
-  if (v && typeof v === 'object') {
-    const out = {};
-    for (const chave of Object.keys(v)) out[chave] = clonar(v[chave]);
-    return out;
-  }
-  return v;
-};
-
-const verifica = (id, descricao, entradas, chamada, esperado) => {
-  test(`${id} — ${descricao}`, () => {
-    const copias = entradas.map(clonar);
-    const saida = chamada(...copias);
-    for (const [campo, valor] of Object.entries(esperado)) {
-      if (campo === 'motivo' && (esperado.valida === false ||
-                                 ['erro', 'repeticiao'].includes(esperado.resultado))) {
-        assert.equal(typeof saida.motivo, 'string', `${id}: motivo deve ser string`);
-        assert.ok(saida.motivo.length > 0, `${id}: motivo nao pode ser vazio`);
-      } else {
-        assert.deepEqual(saida[campo], valor, `${id}: campo ${campo}`);
-      }
-    }
-    entradas.forEach((original, i) =>
-      assert.deepEqual(original, copias[i], `${id}: entrada ${i} nao pode ser alterada`));
-  });
-};
-
-verifica('CT-01', 'posicionar a frota inteira na horizontal', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: true,
-  tabuleiro: [
-    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ],
-  motivo: ''
-});
-
-verifica('CT-02', 'posicionar a frota inteira na vertical', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'V'
-    },
-    {
-      tamanho: 4,
-      linha: 0,
-      coluna: 2,
-      orientacao: 'V'
-    },
-    {
-      tamanho: 3,
-      linha: 0,
-      coluna: 4,
-      orientacao: 'V'
-    },
-    {
-      tamanho: 2,
-      linha: 0,
-      coluna: 6,
-      orientacao: 'V'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: true,
-  tabuleiro: [
-    [5, 0, 4, 0, 3, 0, 2, 0, 0, 0],
-    [5, 0, 4, 0, 3, 0, 2, 0, 0, 0],
-    [5, 0, 4, 0, 3, 0, 0, 0, 0, 0],
-    [5, 0, 4, 0, 0, 0, 0, 0, 0, 0],
-    [5, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ],
-  motivo: ''
-});
-
-verifica('CT-03', 'posicionar frota mista (horizontal e vertical)', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 0,
-      coluna: 5,
-      orientacao: 'V'
-    },
-    {
-      tamanho: 3,
-      linha: 5,
-      coluna: 2,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 7,
-      coluna: 9,
-      orientacao: 'V'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: true,
-  tabuleiro: [
-    [5, 5, 5, 5, 5, 4, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 4, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 4, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 4, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 3, 3, 3, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ],
-  motivo: ''
-});
-
-verifica('CT-04', 'aceitar navios encostados', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 1,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 3,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: true,
-  tabuleiro: [
-    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
-    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
-    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
-    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ],
-  motivo: ''
-});
-
-verifica('CT-05', 'rejeitar navio que ultrapassa a coluna 9', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 6,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-06', 'rejeitar navio que ultrapassa a linha 9', [
-  [
-    {
-      tamanho: 5,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'V'
-    },
-    {
-      tamanho: 4,
-      linha: 0,
-      coluna: 2,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 0,
-      coluna: 4,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 0,
-      coluna: 6,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-07', 'rejeitar navios sobrepostos', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 0,
-      coluna: 3,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-08', 'rejeitar navio de tamanho 6', [
-  [
-    {
-      tamanho: 6,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-09', 'rejeitar tamanho duplicado', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 5,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-10', 'rejeitar frota incompleta', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-11', 'rejeitar orientacao inválida', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'X'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-12', 'rejeitar linha negativa', [
-  [
-    {
-      tamanho: 5,
-      linha: -1,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-13', 'rejeitar coluna 10', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 10,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-14', 'rejeitar frota vazia', [
-  []
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-15', 'rejeitar navio sem campo obrigatorio', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: false,
-  tabuleiro: null
-});
-
-verifica('CT-16', 'nao alterar a frota recebida', [
-  [
-    {
-      tamanho: 5,
-      linha: 0,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 4,
-      linha: 2,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 3,
-      linha: 4,
-      coluna: 0,
-      orientacao: 'H'
-    },
-    {
-      tamanho: 2,
-      linha: 6,
-      coluna: 0,
-      orientacao: 'H'
-    }
-  ]
-], (frota) => posicionarFrota(frota), {
-  valida: true,
-  tabuleiro: [
-    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  ],
-  motivo: ''
-});
+// Casos de tiro isolado: CT-17..33 e CT-38..43, CT-45, CT-46.
+// CT-01..33 foram copiados literalmente da suíte original.
+const { assert, test, testEach, clonar, vazio, verifica, atirar } = require('../support/helper');
 
 verifica('CT-17', 'tiro na água', [
   [
@@ -4667,6 +4077,7 @@ test('CT-27 — o ciclo de dois turnos alterna entre jogador 0 e 1', () => {
 });
 
 // CT-33 — regra de turno: acerto mantem a vez, apenas agua alterna.
+
 test('CT-33 — tiro acertado nao altera o turno', () => {
   const tabuleiro = [
   [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
@@ -4692,4 +4103,1500 @@ test('CT-33 — tiro acertado nao altera o turno', () => {
   assert.equal(r3.resultado, 'agua', 'CT-33: terceiro tiro cai na agua');
   assert.equal(r3.jogador, 1, 'CT-33: somente a agua passa a vez');
   assert.deepEqual(tabuleiro, copiaTabuleiro, 'CT-33: tabuleiro nao pode ser alterado');
+});
+
+verifica('CT-38', 'rejeitar grade de tiros 9x10', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  0,
+  {
+    linha: 0,
+    coluna: 0
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  resultado: 'erro',
+  afundado: null,
+  vencedor: null,
+  jogador: 0,
+  motivo: ''
+});
+
+verifica('CT-39', 'rejeitar grade de tiros com marca invalida', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'x'
+    ]
+  ],
+  0,
+  {
+    linha: 0,
+    coluna: 0
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      'x'
+    ]
+  ],
+  resultado: 'erro',
+  afundado: null,
+  vencedor: null,
+  jogador: 0,
+  motivo: ''
+});
+
+verifica('CT-40', 'rejeitar tabuleiro com casa 6', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 6]
+  ],
+  [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  0,
+  {
+    linha: 0,
+    coluna: 0
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  resultado: 'erro',
+  afundado: null,
+  vencedor: null,
+  jogador: 0,
+  motivo: ''
+});
+
+testEach([
+  [
+    'alvo nulo',
+    null
+  ],
+  [
+    'sem coluna',
+    {
+      linha: 0
+    }
+  ],
+  [
+    'linha NaN',
+    {
+      linha: NaN,
+      coluna: 0
+    }
+  ],
+  [
+    'coluna booleana',
+    {
+      linha: 0,
+      coluna: true
+    }
+  ]
+], 'CT-41 — alvo malformado: %s', (rotulo, alvo) => {
+  const tab = [
+  [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+];
+  const tiros = vazio();
+  const copiaTab = clonar(tab), copiaTiros = clonar(tiros), copiaAlvo = clonar(alvo);
+  const saida = atirar(copiaTab, copiaTiros, 0, copiaAlvo);
+  assert.equal(saida.resultado, 'erro', `${rotulo}: resultado`);
+  assert.equal(saida.jogador, 0, `${rotulo}: jogador`);
+  assert.deepEqual(saida.tiros, tiros, `${rotulo}: tiros inalterados`);
+  assert.equal(typeof saida.motivo, 'string', `${rotulo}: motivo string`);
+  assert.ok(saida.motivo.length > 0, `${rotulo}: motivo vazio`);
+  assert.deepEqual(tab, copiaTab, `${rotulo}: tabuleiro inalterado`);
+  assert.deepEqual(tiros, copiaTiros, `${rotulo}: grade inalterada`);
+  assert.deepEqual(alvo, copiaAlvo, `${rotulo}: alvo inalterado`);
+});
+
+testEach([
+  [
+    'acerto',
+    [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    {
+      linha: 0,
+      coluna: 0
+    },
+    'acerto',
+    null
+  ],
+  [
+    'afundamento',
+    [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        'acerto',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ],
+    {
+      linha: 6,
+      coluna: 1
+    },
+    'afundado',
+    2
+  ]
+], 'CT-42 — jogador 1 acerta e afunda: %s', (rotulo, tiros, alvo, resultadoEsperado, afundadoEsperado) => {
+  const tab = [
+  [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+];
+  const copiaTab = clonar(tab), copiaTiros = clonar(tiros), copiaAlvo = clonar(alvo);
+  const saida = atirar(copiaTab, copiaTiros, 1, copiaAlvo);
+  const marcada = clonar(tiros);
+  marcada[alvo.linha][alvo.coluna] = afundadoEsperado === null ? 'acerto' : 'afundado';
+  assert.equal(saida.resultado, resultadoEsperado, `${rotulo}: resultado`);
+  assert.equal(saida.afundado, afundadoEsperado, `${rotulo}: afundado`);
+  assert.equal(saida.vencedor, null, `${rotulo}: vencedor`);
+  assert.equal(saida.jogador, 1, `${rotulo}: jogador 1 mantem a vez`);
+  assert.deepEqual(saida.tiros, marcada, `${rotulo}: grade`);
+  assert.deepEqual(tab, copiaTab, `${rotulo}: tabuleiro inalterado`);
+  assert.deepEqual(tiros, copiaTiros, `${rotulo}: grade recebida inalterada`);
+});
+
+verifica('CT-43', 'vitoria do jogador 1 no tiro isolado', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  [
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  1,
+  {
+    linha: 6,
+    coluna: 1
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: [
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      'acerto',
+      'acerto',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      'acerto',
+      'afundado',
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  resultado: 'afundado',
+  afundado: 2,
+  vencedor: 1,
+  jogador: 1,
+  motivo: ''
+});
+
+verifica('CT-45', 'rejeitar grade de tiros nula', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  null,
+  0,
+  {
+    linha: 0,
+    coluna: 0
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: null,
+  resultado: 'erro',
+  afundado: null,
+  vencedor: null,
+  jogador: 0,
+  motivo: ''
+});
+
+verifica('CT-46', 'rejeitar jogador invalido no tiro', [
+  [
+    [5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [4, 4, 4, 4, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  2,
+  {
+    linha: 0,
+    coluna: 0
+  }
+], (tabuleiro, tiros, jogador, alvo) => atirar(tabuleiro, tiros, jogador, alvo), {
+  tiros: [
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  resultado: 'erro',
+  afundado: null,
+  vencedor: null,
+  jogador: 2,
+  motivo: ''
 });

@@ -64,7 +64,7 @@ afundamento e a vitória sem transportar um objeto de frota separado.
 
 ### 1.4 Contrato JavaScript
 
-Duas funções CommonJS em `src/batalhaNaval.js`:
+Funções CommonJS em `src/batalhaNaval.js` (camada pura) e `src/partida.js` (estado da partida):
 
 ```js
 module.exports = { posicionarFrota, atirar };
@@ -97,6 +97,38 @@ As duas funções **não alteram** as entradas: devolvem estruturas novas. Em
 `repeticiao` e `erro`, o jogador não avança e a grade recebida é devolvida
 sem alteração.
 
+### 1.5 Contrato da partida (`src/partida.js`)
+
+```js
+module.exports = { criarPartida, posicionar, atirar, visao };
+```
+
+**`criarPartida()`** devolve o estado inicial; `null` em `tabuleiros` e
+`tiros` significa que a frota ainda não foi posicionada:
+
+```js
+{ tabuleiros: [null, null], tiros: [null, null], vez: 0, vencedor: null }
+```
+
+**`posicionar(estado, jogador, frota)`** devolve
+`{ valida, estado, motivo }`. Valida a frota com as mesmas regras de
+`posicionarFrota`, grava o tabuleiro e inicializa a grade do jogador, sem
+alterar a vez. Se a frota for inválida, o estado recebido é devolvido.
+
+**`atirar(estado, alvo, jogador = estado.vez)`** devolve
+`{ estado, resultado, afundado, vencedor, motivo }`. Mira sempre no
+tabuleiro adversário e grava na grade do atirador. Acerto e afundamento
+mantêm a vez; água alterna; vitória congela `vez` e preenche `vencedor`.
+O 3º argumento, quando diverge de `estado.vez`, produz `erro`. Tiro após o
+fim também produz `erro`. Em ambos, o estado recebido é devolvido.
+
+**`visao(estado, jogador)`** devolve `{ tabuleiro }`: uma matriz 10x10 com
+`'afundado'` apenas nas casas dos navios já afundados do adversário; todo o
+resto é `null`. Acerto isolado e água não são revelados.
+
+Erros seguem o contrato já adotado na camada pura: `resultado: 'erro'` +
+`motivo` descritivo, sem campo adicional de tipo.
+
 ## 2. Funcionamento dos casos de teste
 
 Os casos estão no arquivo
@@ -111,10 +143,14 @@ contém:
   alvo) e **Resultado Esperado** (campos retornados e justificativa);
 - **Pós-condições** — efeito após a execução.
 
-Cada caso tem um teste equivalente em `test/batalhaNaval.test.js`, com o mesmo
-ID (CT-01 a CT-33). Assim fica atendida a exigência do enunciado: **casos de
+Cada caso tem um teste equivalente em `test/`, com o mesmo ID (CT-01 a CT-62),
+distribuído por camada em `posicionamento.test.js`, `tiros.test.js`,
+`partida.test.js` e `visao.test.js`. O helper `support/helper.js` concentra
+carregamento, cópia e asserções (inclusive `testEach`, equivalente local ao
+`test.each` que este Node não expõe); CT-01 a CT-33 foram copiados literalmente
+da suíte original. Assim fica atendida a exigência do enunciado: **casos de
 teste em Javascript para testar Javascript**. O `.docx` é a especificação
-legível; o `.js` é a versão executável dos mesmos casos.
+legível; os `.js` são a versão executável dos mesmos casos.
 
 ### Casos incluídos
 
@@ -153,6 +189,35 @@ legível; o `.js` é a versão executável dos mesmos casos.
 | CT-31 | Tiro em casa já afundada | `repeticiao` |
 | CT-32 | Tabuleiro 9×10 | `erro` |
 | CT-33 | Acerto mantém o turno; água alterna | `acerto` (jogador 0), depois `agua` (jogador 1) |
+| CT-34 | Frota nula e não-array | `valida: false` (2 linhas via `test.each`) |
+| CT-35 | Frota com cinco navios | `valida: false` |
+| CT-36 | Linha decimal `1.5` | `valida: false` |
+| CT-37 | Orientação minúscula `'h'` | `valida: false` |
+| CT-38 | Grade de tiros 9×10 | `erro` |
+| CT-39 | Grade com marca inválida | `erro` |
+| CT-40 | Tabuleiro com casa 6 | `erro` |
+| CT-41 | Alvo nulo/sem coluna/NaN/booleano | `erro` (4 linhas via `test.each`) |
+| CT-42 | Jogador 1 acerta e afunda | jogador 1 mantém a vez (2 linhas) |
+| CT-43 | Vitória do jogador 1 | `vencedor: 1` |
+| CT-44 | Contato diagonal entre navios | `valida: true` |
+| CT-45 | Grade de tiros nula | `erro` |
+| CT-46 | Jogador inválido (`2`) | `erro` |
+| CT-47 | Estado inicial | `[null, null]`, `vez: 0` |
+| CT-48 | Posicionar jogador 0 | estado com `tabuleiros[0]` |
+| CT-49 | Posicionar jogador 1 | estado com os dois tabuleiros |
+| CT-50 | Frota inválida na partida | `valida: false`, estado intacto |
+| CT-51 | Tiro antes das frotas | `erro`, estado intacto |
+| CT-52 | Água alterna 0 → 1 | `vez: 1` |
+| CT-53 | Água alterna 1 → 0 | `vez: 0` |
+| CT-54 | Acerto mantém jogador 0 | `vez: 0` |
+| CT-55 | Acerto mantém jogador 1 | `vez: 1` |
+| CT-56 | Afundamento mantém a vez | 4 tamanhos, jogador 1 em duas linhas |
+| CT-57 | Vitória do jogador 0 | `vencedor: 0`, vez congelada |
+| CT-58 | Vitória do jogador 1 | `vencedor: 1`, vez congelada |
+| CT-59 | Tiro fora da vez | `erro`, estado intacto |
+| CT-60 | Tiro depois do fim | `erro`, estado intacto |
+| CT-61 | Visão: só navios afundados | `(6,0)` e `(6,1)` = `afundado` |
+| CT-62 | Sequência completa de 14 tiros | `vencedor: 0`, 14 cascos marcados |
 
 ### Cobertura das regras
 
@@ -168,7 +233,13 @@ legível; o `.js` é a versão executável dos mesmos casos.
 | Tiro repetido | CT-22, CT-31 |
 | Validação de entradas | CT-05, CT-06, CT-08 a CT-15, CT-23, CT-24, CT-32 |
 | Alternância de turnos (2 jogadores) | CT-17 (água alterna), CT-18 a CT-21, CT-26, CT-28 a CT-30 (acerto mantém), CT-27 e CT-33 |
-| Vitória e não vitória | CT-25, CT-26 |
+| Vitória e não vitória | CT-25, CT-26, CT-43, CT-57, CT-58, CT-60, CT-62 |
+| Partida: estado e posicionamento | CT-47 a CT-51 |
+| Partida: turnos e afundamento | CT-52 a CT-56 |
+| Partida: fim e tiro fora da vez | CT-57 a CT-60, CT-62 |
+| Visão do adversário (só afundados) | CT-61 |
+| Validação de alvo, grade e jogador | CT-23, CT-24, CT-32, CT-38 a CT-41, CT-45, CT-46 |
+| Contato diagonal permitido | CT-44 |
 
 ### Isolamento das regras
 
@@ -179,22 +250,30 @@ legível; o `.js` é a versão executável dos mesmos casos.
 - CT-19, CT-20, CT-29 e CT-30 cobrem individualmente os quatro tamanhos de
   navio. CT-25 e CT-26 separam "último casco" de "ainda resta casco".
 - CT-33 encadeia três tiros (acerto, acerto, água) para fixar a regra de
-  turno sem depender de um único retorno.
+  turno sem depender de um único retorno. CT-42 repete a prova com o
+  jogador 1, e CT-54 a CT-56 fazem o mesmo na camada de partida.
+- CT-34 a CT-46 fecham buracos do contrato atual com uma condição alterada
+  por vez; `test.each` agrupa apenas variações da mesma regra.
+- CT-62 encadeia criação, posicionamento dos dois jogadores e 14 tiros: é o
+  caso que prova que o jogo todo fecha de ponta a ponta.
 
 ### Casos executáveis em JavaScript
 
 - **Runner:** `node --test` (nativo do Node.js 18+). Não há dependências para
   instalar.
 - **Executar:** `npm test` na raiz do repositório.
-- **Situação atual:** os 33 testes existem e falham (`# fail 33`) com a
-  mensagem "Crie src/batalhaNaval.js exportando posicionarFrota/atirar"
-  seguida do `stack` real de carregamento. Esse é o estado **RED** esperado: a
-  implementação do jogo não faz parte deste entregável.
+- **Situação atual:** os 62 casos viram 70 testes (quatro tabelas com
+   `testEach` têm mais de uma linha) e falham: `# tests 70`, `# pass 0`,
+   `# fail 70`. Esse é o estado **RED** esperado: a implementação do jogo não
+   faz parte deste entregável. As mensagens indicam `src/batalhaNaval.js` e
+   `src/partida.js` e trazem o `stack` real de carregamento.
 - **Dados JavaScript usados nos testes:** frotas com navios
   `{ tamanho, linha, coluna, orientacao }`, matrizes 10×10 de `0`/`2`/`3`/`4`/`5`
   e de `null`/`'agua'`/`'acerto'`/`'afundado'`, índices `0`/`1`, alvos
   `{ linha, coluna }` e entradas inválidas (fora do tabuleiro, tamanho 6,
-  tamanho duplicado, frota vazia, orientação `X`, campos ausentes, matriz 9×10).
+  tamanho duplicado, frota vazia, orientação `X`, campos ausentes, matriz 9×10,
+   frota nula, linha decimal, orientação minúscula, grade nula, alvo `NaN`,
+   jogador `2` e estado de partida com `vez`, `vencedor` e duas grades.
 
 ### Grade de referência
 
@@ -214,7 +293,8 @@ recebem o tamanho dele):
 0 0 0 0 0 0 0 0 0 0
 ```
 
-Essa mesma grade é usada nos casos de tiro CT-17 a CT-33, sempre com grades de
+Essa mesma grade é usada nos casos de tiro CT-17 a CT-46 e nas duas frotas da
+partida (CT-47 a CT-62), sempre com grades de
 tiros parcialmente preenchidas para isolar afundamento e vitória.
 
 ## 3. Estrutura do repositório
@@ -224,14 +304,19 @@ desafio_teste_batalha_naval/
 ├── README.md
 ├── package.json
 ├── casos_de_teste_batalha_naval.docx
+├── support/
+│   └── helper.js
 └── test/
-    └── batalhaNaval.test.js
+    ├── posicionamento.test.js
+    ├── tiros.test.js
+    ├── partida.test.js
+    └── visao.test.js
 ```
 
 Não há implementação do jogo neste repositório: o entregável é a especificação
 dos casos (`.docx`) e sua versão executável em JavaScript (`test/`). Abra o
 `.docx` com Microsoft Word ou LibreOffice Writer e rode `npm test` para executar
-os 33 casos.
+os 62 casos.
 
 ## 4. Colaboradores
 
