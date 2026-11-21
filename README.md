@@ -143,7 +143,7 @@ contém:
   alvo) e **Resultado Esperado** (campos retornados e justificativa);
 - **Pós-condições** — efeito após a execução.
 
-Cada caso tem um teste equivalente em `test/`, com o mesmo ID (CT-01 a CT-62),
+Cada caso tem um teste equivalente em `test/`, com o mesmo ID (CT-01 a CT-64),
 distribuído por camada em `posicionamento.test.js`, `tiros.test.js`,
 `partida.test.js` e `visao.test.js`. O helper `support/helper.js` concentra
 carregamento, cópia e asserções (inclusive `testEach`, equivalente local ao
@@ -218,6 +218,8 @@ legível; os `.js` são a versão executável dos mesmos casos.
 | CT-60 | Tiro depois do fim | `erro`, estado intacto |
 | CT-61 | Visão: só navios afundados | `(6,0)` e `(6,1)` = `afundado` |
 | CT-62 | Sequência completa de 14 tiros | `vencedor: 0`, 14 cascos marcados |
+| CT-63 | Jogador inválido em `posicionar` (2 e -1) | `valida: false`, estado intacto |
+| CT-64 | Visão com partida sem frotas | grades 10x10 só com `null` |
 
 ### Cobertura das regras
 
@@ -234,10 +236,11 @@ legível; os `.js` são a versão executável dos mesmos casos.
 | Validação de entradas | CT-05, CT-06, CT-08 a CT-15, CT-23, CT-24, CT-32 |
 | Alternância de turnos (2 jogadores) | CT-17 (água alterna), CT-18 a CT-21, CT-26, CT-28 a CT-30 (acerto mantém), CT-27 e CT-33 |
 | Vitória e não vitória | CT-25, CT-26, CT-43, CT-57, CT-58, CT-60, CT-62 |
-| Partida: estado e posicionamento | CT-47 a CT-51 |
+| Partida: estado e posicionamento | CT-47 a CT-51, CT-63 |
 | Partida: turnos e afundamento | CT-52 a CT-56 |
 | Partida: fim e tiro fora da vez | CT-57 a CT-60, CT-62 |
 | Visão do adversário (só afundados) | CT-61 |
+| Visão com estado sem frotas | CT-64 |
 | Validação de alvo, grade e jogador | CT-23, CT-24, CT-32, CT-38 a CT-41, CT-45, CT-46 |
 | Contato diagonal permitido | CT-44 |
 
@@ -262,9 +265,9 @@ legível; os `.js` são a versão executável dos mesmos casos.
 - **Runner:** `node --test` (nativo do Node.js 18+). Não há dependências para
   instalar.
 - **Executar:** `npm test` na raiz do repositório.
-- **Situação atual:** os 62 casos viram 70 testes (quatro tabelas com
-   `testEach` têm mais de uma linha) e falham: `# tests 70`, `# pass 0`,
-   `# fail 70`. Esse é o estado **RED** esperado: a implementação do jogo não
+- **Situação atual:** os 64 casos viram 73 testes (cinco tabelas com
+   `testEach` têm mais de uma linha) e falham: `# tests 73`, `# pass 0`,
+   `# fail 73`. Esse é o estado **RED** esperado: a implementação do jogo não
    faz parte deste entregável. As mensagens indicam `src/batalhaNaval.js` e
    `src/partida.js` e trazem o `stack` real de carregamento.
 - **Dados JavaScript usados nos testes:** frotas com navios
@@ -316,7 +319,7 @@ desafio_teste_batalha_naval/
 Não há implementação do jogo neste repositório: o entregável é a especificação
 dos casos (`.docx`) e sua versão executável em JavaScript (`test/`). Abra o
 `.docx` com Microsoft Word ou LibreOffice Writer e rode `npm test` para executar
-os 62 casos.
+os 64 casos.
 
 ## 4. Colaboradores
 

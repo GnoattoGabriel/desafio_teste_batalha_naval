@@ -532,3 +532,9 @@ verifica('CT-61', 'visao revela apenas navios afundados', [
     }
   }
 });
+
+// CT-64 — visao com a partida ainda sem frotas: grades totalmente vazias.
+verifica('CT-64', 'visao com partida sem frotas',
+  [{ tabuleiros: [null, null], tiros: [null, null], vez: 0, vencedor: null }],
+  (estado) => ({ v0: partida.visao(estado, 0), v1: partida.visao(estado, 1) }),
+  { __retorno: { v0: { tabuleiro: Array.from({ length: 10 }, () => Array(10).fill(null)) }, v1: { tabuleiro: Array.from({ length: 10 }, () => Array(10).fill(null)) } } });

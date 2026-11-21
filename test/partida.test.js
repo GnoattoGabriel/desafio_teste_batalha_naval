@@ -7703,3 +7703,25 @@ verifica('CT-62', 'sequencia completa ate a vitoria', [], () => {
     cascosMarcados: 14
   }
 });
+
+// CT-63 — jogador invalido em posicionar nao altera o estado.
+testEach([
+  ['jogador 2', 2],
+  ['jogador -1', -1],
+], 'CT-63 — posicionar com jogador invalido: %s', (rotulo, jogador) => {
+  const estado = { tabuleiros: [null, null], tiros: [null, null], vez: 0, vencedor: null };
+  const frota = [
+  { tamanho: 5, linha: 0, coluna: 0, orientacao: 'H' },
+  { tamanho: 4, linha: 2, coluna: 0, orientacao: 'H' },
+  { tamanho: 3, linha: 4, coluna: 0, orientacao: 'H' },
+  { tamanho: 2, linha: 6, coluna: 0, orientacao: 'H' }
+];
+  const copiaEstado = clonar(estado), copiaFrota = clonar(frota);
+  const saida = partida.posicionar(copiaEstado, jogador, copiaFrota);
+  assert.equal(saida.valida, false, `${rotulo}: valida`);
+  assert.deepEqual(saida.estado, estado, `${rotulo}: estado devolvido intacto`);
+  assert.equal(typeof saida.motivo, 'string', `${rotulo}: motivo string`);
+  assert.ok(saida.motivo.length > 0, `${rotulo}: motivo vazio`);
+  assert.deepEqual(estado, copiaEstado, `${rotulo}: estado recebido nao alterado`);
+  assert.deepEqual(frota, copiaFrota, `${rotulo}: frota recebida nao alterada`);
+});
